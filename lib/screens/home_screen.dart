@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   ProgressService? _progressService;
+  String _selectedCefr = 'A1';
 
   @override
   void initState() {
@@ -30,6 +31,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void _refreshProgress() {
     if (mounted) setState(() {});
   }
+
+  List<VocabTheme> get _filteredThemes =>
+      allThemes.where((t) => t.cefrLevel == _selectedCefr).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                   child: Column(
                     children: [
-                      // Settings icon top-right
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -81,9 +84,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        '\u{1F3AF}',
-                        style: TextStyle(fontSize: 48),
+                      const Icon(
+                        Icons.school_rounded,
+                        size: 48,
+                        color: Color(0xFF2D3436),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -104,20 +108,36 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: const Color(0xFF636E72),
                                 ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Scegli un tema e indovina le parole',
-                        style:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: const Color(0xFF636E72),
-                                ),
-                      ),
-                      // APK download button (web only)
                       if (kIsWeb) ...[
                         const SizedBox(height: 16),
                         _ApkDownloadButton(),
                       ],
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
+                      // CEFR Level Selector
+                      _CefrSelector(
+                        selected: _selectedCefr,
+                        onSelected: (level) =>
+                            setState(() => _selectedCefr = level),
+                      ),
+                      const SizedBox(height: 8),
+                      // Level description
+                      Text(
+                        cefrLabels[_selectedCefr] ?? _selectedCefr,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: cefrColors[_selectedCefr] ?? Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_filteredThemes.length} categorie - ${_filteredThemes.fold<int>(0, (sum, t) => sum + t.words.length)} parole',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF636E72),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -134,14 +154,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final theme = allThemes[index];
+                      final theme = _filteredThemes[index];
                       return _ThemeCard(
                         theme: theme,
                         progressService: _progressService,
                         onReturn: _refreshProgress,
                       );
                     },
-                    childCount: allThemes.length,
+                    childCount: _filteredThemes.length,
                   ),
                 ),
               ),
@@ -151,6 +171,48 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CefrSelector extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  const _CefrSelector({required this.selected, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: cefrLabels.keys.map((level) {
+          final isSelected = level == selected;
+          final color = cefrColors[level] ?? Colors.grey;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: FilterChip(
+              label: Text(
+                level,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: isSelected ? Colors.white : color,
+                ),
+              ),
+              selected: isSelected,
+              onSelected: (_) => onSelected(level),
+              backgroundColor: color.withValues(alpha: 0.1),
+              selectedColor: color,
+              checkmarkColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -282,19 +344,26 @@ class _ThemeCardState extends State<_ThemeCard> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
-                    child: Text(
+                    child: Icon(
                       widget.theme.icon,
-                      style: const TextStyle(fontSize: 32),
+                      size: 32,
+                      color: themeColor,
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  widget.theme.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2D3436),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    widget.theme.name,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2D3436),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -306,7 +375,6 @@ class _ThemeCardState extends State<_ThemeCard> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                // Progress bar
                 if (completionPct > 0) ...[
                   const SizedBox(height: 8),
                   Padding(

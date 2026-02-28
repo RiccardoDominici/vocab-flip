@@ -55,7 +55,6 @@ class _GameScreenState extends State<GameScreen> {
 
     _roundResults[ProgressService.wordId(widget.theme.name, word.italian)] = result;
 
-    // Auto-advance after a short delay
     await Future.delayed(const Duration(milliseconds: 350));
 
     if (!mounted) return;
@@ -67,7 +66,6 @@ class _GameScreenState extends State<GameScreen> {
         _evaluated = false;
       });
     } else {
-      // Round complete — show summary
       _showRoundSummary();
     }
   }
@@ -132,17 +130,17 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Text(
-                      widget.theme.icon,
-                      style: const TextStyle(fontSize: 28),
-                    ),
+                    Icon(widget.theme.icon, size: 28, color: themeColor),
                     const SizedBox(width: 8),
-                    Text(
-                      widget.theme.name,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D3436),
+                    Flexible(
+                      child: Text(
+                        widget.theme.name,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3436),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const Spacer(),
@@ -188,14 +186,14 @@ class _GameScreenState extends State<GameScreen> {
                       : _evaluated
                           ? 'Prossima parola...'
                           : 'Come si dice in inglese? Tocca per scoprire',
-                  style: TextStyle(
-                    color: const Color(0xFF636E72),
+                  style: const TextStyle(
+                    color: Color(0xFF636E72),
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
                 ),
               ),
-              // Card - centered
+              // Card
               Expanded(
                 child: Center(
                   child: Padding(

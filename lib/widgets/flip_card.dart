@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/vocabulary.dart';
 import '../models/word_progress.dart';
 import '../utils/speech.dart';
+import 'word_image.dart';
 
 class FlipCardWidget extends StatefulWidget {
   final VocabWord word;
@@ -122,9 +123,10 @@ class _FrontCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            word.emoji,
-            style: const TextStyle(fontSize: 80),
+          WordImage(
+            keyword: word.imageSearchTerm,
+            size: 120,
+            borderRadius: BorderRadius.circular(20),
           ),
           const SizedBox(height: 24),
           Padding(
@@ -198,9 +200,10 @@ class _BackCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            word.emoji,
-            style: const TextStyle(fontSize: 48),
+          WordImage(
+            keyword: word.imageSearchTerm,
+            size: 80,
+            borderRadius: BorderRadius.circular(16),
           ),
           const SizedBox(height: 12),
           Padding(
@@ -275,21 +278,21 @@ class _BackCard extends StatelessWidget {
                     children: [
                       _EvalButton(
                         label: 'No',
-                        emoji: '\u{1F534}',
+                        icon: Icons.close_rounded,
                         color: const Color(0xFFFF4757),
                         onTap: () => onEvaluate!(EvalResult.unknown),
                       ),
                       const SizedBox(width: 10),
                       _EvalButton(
                         label: 'Incerto',
-                        emoji: '\u{1F7E1}',
+                        icon: Icons.help_outline_rounded,
                         color: const Color(0xFFFFA502),
                         onTap: () => onEvaluate!(EvalResult.uncertain),
                       ),
                       const SizedBox(width: 10),
                       _EvalButton(
                         label: 'La so!',
-                        emoji: '\u{1F7E2}',
+                        icon: Icons.check_rounded,
                         color: const Color(0xFF2ED573),
                         onTap: () => onEvaluate!(EvalResult.known),
                       ),
@@ -306,13 +309,13 @@ class _BackCard extends StatelessWidget {
 
 class _EvalButton extends StatelessWidget {
   final String label;
-  final String emoji;
+  final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
   const _EvalButton({
     required this.label,
-    required this.emoji,
+    required this.icon,
     required this.color,
     required this.onTap,
   });
@@ -336,7 +339,7 @@ class _EvalButton extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 22)),
+            Icon(icon, size: 22, color: color),
             const SizedBox(height: 2),
             Text(
               label,

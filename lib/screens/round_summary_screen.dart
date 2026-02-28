@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/vocabulary.dart';
 import '../models/word_progress.dart';
-import '../services/progress_service.dart';
 import 'game_screen.dart';
 
 class RoundSummaryScreen extends StatelessWidget {
@@ -41,10 +40,14 @@ class RoundSummaryScreen extends StatelessWidget {
             child: Column(
               children: [
                 const Spacer(flex: 1),
-                // Trophy / Result icon
-                Text(
-                  result.unknownCount == 0 ? '\u{1F3C6}' : '\u{1F4CA}',
-                  style: const TextStyle(fontSize: 64),
+                Icon(
+                  result.unknownCount == 0
+                      ? Icons.emoji_events_rounded
+                      : Icons.bar_chart_rounded,
+                  size: 64,
+                  color: result.unknownCount == 0
+                      ? const Color(0xFFFFD700)
+                      : themeColor,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -56,20 +59,27 @@ class RoundSummaryScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  '${theme.icon} ${theme.name}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: themeColor,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(theme.icon, size: 20, color: themeColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      theme.name,
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: themeColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 32),
                 // Stats cards
                 Row(
                   children: [
                     _StatCard(
-                      emoji: '\u{1F7E2}',
+                      icon: Icons.check_circle_rounded,
                       label: 'La so!',
                       count: result.knownCount,
                       percent: knownPct,
@@ -77,7 +87,7 @@ class RoundSummaryScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     _StatCard(
-                      emoji: '\u{1F7E1}',
+                      icon: Icons.help_rounded,
                       label: 'Incerto',
                       count: result.uncertainCount,
                       percent: uncertainPct,
@@ -85,7 +95,7 @@ class RoundSummaryScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     _StatCard(
-                      emoji: '\u{1F534}',
+                      icon: Icons.cancel_rounded,
                       label: 'Non la sapevo',
                       count: result.unknownCount,
                       percent: unknownPct,
@@ -146,8 +156,8 @@ class RoundSummaryScreen extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text('\u{1F3C5}',
-                                  style: TextStyle(fontSize: 24)),
+                              Icon(Icons.military_tech_rounded,
+                                  size: 24, color: themeColor),
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
@@ -224,14 +234,14 @@ class RoundSummaryScreen extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  final String emoji;
+  final IconData icon;
   final String label;
   final int count;
   final double percent;
   final Color color;
 
   const _StatCard({
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.count,
     required this.percent,
@@ -256,7 +266,7 @@ class _StatCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 28)),
+            Icon(icon, size: 28, color: color),
             const SizedBox(height: 6),
             Text(
               '$count',
