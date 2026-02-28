@@ -6,13 +6,15 @@ import '../utils/speech.dart';
 class FlipCardWidget extends StatefulWidget {
   final VocabWord word;
   final Color themeColor;
-  final VoidCallback onFlipped;
+  final bool isFlipped;
+  final VoidCallback onTap;
 
   const FlipCardWidget({
     super.key,
     required this.word,
     required this.themeColor,
-    required this.onFlipped,
+    required this.isFlipped,
+    required this.onTap,
   });
 
   @override
@@ -23,8 +25,6 @@ class _FlipCardWidgetState extends State<FlipCardWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  bool _isFlipped = false;
-  bool _showBack = false;
 
   @override
   void initState() {
@@ -36,13 +36,19 @@ class _FlipCardWidgetState extends State<FlipCardWidget>
     _animation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-    _controller.addListener(() {
-      if (_controller.value >= 0.5 && !_showBack) {
-        setState(() => _showBack = true);
-      } else if (_controller.value < 0.5 && _showBack) {
-        setState(() => _showBack = false);
-      }
-    });
+    if (widget.isFlipped) {
+      _controller.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(FlipCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isFlipped && !oldWidget.isFlipped) {
+      _controller.forward();
+    } else if (!widget.isFlipped && oldWidget.isFlipped) {
+      _controller.reverse();
+    }
   }
 
   @override
@@ -51,29 +57,23 @@ class _FlipCardWidgetState extends State<FlipCardWidget>
     super.dispose();
   }
 
-  void _flip() {
-    if (_isFlipped) return;
-    _isFlipped = true;
-    _controller.forward();
-    widget.onFlipped();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        final angle = _animation.value * pi;
-        final isBack = _animation.value >= 0.5;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          final angle = _animation.value * pi;
+          final showBack = _animation.value >= 0.5;
 
-        return GestureDetector(
-          onTap: _flip,
-          child: Transform(
+          return Transform(
             alignment: Alignment.center,
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.001)
               ..rotateY(angle),
-            child: isBack
+            child: showBack
                 ? Transform(
                     alignment: Alignment.center,
                     transform: Matrix4.identity()..rotateY(pi),
@@ -86,9 +86,9 @@ class _FlipCardWidgetState extends State<FlipCardWidget>
                     word: widget.word,
                     themeColor: widget.themeColor,
                   ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
@@ -113,32 +113,37 @@ class _FrontCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            word.emoji,
-            style: const TextStyle(fontSize: 48),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            word.italian,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2D3436),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              word.emoji,
+              style: const TextStyle(fontSize: 48),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tocca per girare',
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey[400],
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                word.italian,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2D3436),
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              'Tocca per girare',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[400],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -171,59 +176,67 @@ class _BackCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            word.emoji,
-            style: const TextStyle(fontSize: 36),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            word.english,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              word.emoji,
+              style: const TextStyle(fontSize: 36),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            word.italian,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.8),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
-          GestureDetector(
-            onTap: () => SpeechUtil.speak(word.english),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(20),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                word.english,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
               ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.volume_up_rounded, color: Colors.white, size: 20),
-                  SizedBox(width: 4),
-                  Text(
-                    'Ascolta',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                word.italian,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withValues(alpha: 0.8),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () => SpeechUtil.speak(word.english),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.volume_up_rounded, color: Colors.white, size: 20),
+                    SizedBox(width: 4),
+                    Text(
+                      'Ascolta',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
