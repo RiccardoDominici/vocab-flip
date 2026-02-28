@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../data/vocabulary.dart';
+import '../models/word_progress.dart';
 import '../utils/speech.dart';
 
 class FlipCardWidget extends StatefulWidget {
@@ -8,7 +9,7 @@ class FlipCardWidget extends StatefulWidget {
   final Color themeColor;
   final bool isFlipped;
   final VoidCallback onTap;
-  final VoidCallback? onNext;
+  final void Function(EvalResult)? onEvaluate;
 
   const FlipCardWidget({
     super.key,
@@ -16,7 +17,7 @@ class FlipCardWidget extends StatefulWidget {
     required this.themeColor,
     required this.isFlipped,
     required this.onTap,
-    this.onNext,
+    this.onEvaluate,
   });
 
   @override
@@ -82,7 +83,7 @@ class _FlipCardWidgetState extends State<FlipCardWidget>
                     child: _BackCard(
                       word: widget.word,
                       themeColor: widget.themeColor,
-                      onNext: widget.onNext,
+                      onEvaluate: widget.onEvaluate,
                     ),
                   )
                 : _FrontCard(
@@ -163,12 +164,12 @@ class _FrontCard extends StatelessWidget {
 class _BackCard extends StatelessWidget {
   final VocabWord word;
   final Color themeColor;
-  final VoidCallback? onNext;
+  final void Function(EvalResult)? onEvaluate;
 
   const _BackCard({
     required this.word,
     required this.themeColor,
-    this.onNext,
+    this.onEvaluate,
   });
 
   @override
@@ -199,39 +200,39 @@ class _BackCard extends StatelessWidget {
         children: [
           Text(
             word.emoji,
-            style: const TextStyle(fontSize: 56),
+            style: const TextStyle(fontSize: 48),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               word.english,
               style: const TextStyle(
-                fontSize: 32,
+                fontSize: 30,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               word.italian,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 color: Colors.white.withValues(alpha: 0.75),
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           // Audio button
           GestureDetector(
             onTap: () => SpeechUtil.speak(word.english),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(24),
@@ -239,14 +240,14 @@ class _BackCard extends StatelessWidget {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.volume_up_rounded, color: Colors.white, size: 22),
-                  SizedBox(width: 6),
+                  Icon(Icons.volume_up_rounded, color: Colors.white, size: 20),
+                  SizedBox(width: 4),
                   Text(
                     'Ascolta',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
-                      fontSize: 15,
+                      fontSize: 14,
                     ),
                   ),
                 ],
@@ -254,32 +255,99 @@ class _BackCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Next button
-          if (onNext != null)
-            GestureDetector(
-              onTap: onNext,
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+          // Evaluation buttons
+          if (onEvaluate != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  Text(
+                    'La sapevi?',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  color: themeColor,
-                  size: 28,
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _EvalButton(
+                        label: 'No',
+                        emoji: '\u{1F534}',
+                        color: const Color(0xFFFF4757),
+                        onTap: () => onEvaluate!(EvalResult.unknown),
+                      ),
+                      const SizedBox(width: 10),
+                      _EvalButton(
+                        label: 'Incerto',
+                        emoji: '\u{1F7E1}',
+                        color: const Color(0xFFFFA502),
+                        onTap: () => onEvaluate!(EvalResult.uncertain),
+                      ),
+                      const SizedBox(width: 10),
+                      _EvalButton(
+                        label: 'La so!',
+                        emoji: '\u{1F7E2}',
+                        color: const Color(0xFF2ED573),
+                        onTap: () => onEvaluate!(EvalResult.known),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _EvalButton extends StatelessWidget {
+  final String label;
+  final String emoji;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _EvalButton({
+    required this.label,
+    required this.emoji,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 22)),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,7 +1,9 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import '../data/vocabulary.dart';
+import '../models/word_progress.dart';
+import '../services/progress_service.dart';
 import '../widgets/flip_card.dart';
+import 'round_summary_screen.dart';
 
 class GameScreen extends StatefulWidget {
   final VocabTheme theme;
@@ -16,19 +18,22 @@ class _GameScreenState extends State<GameScreen> {
   late List<VocabWord> _words;
   int _currentIndex = 0;
   bool _isFlipped = false;
+  bool _evaluated = false;
   static const int _cardsPerRound = 10;
+  ProgressService? _progressService;
+  final Map<String, EvalResult> _roundResults = {};
 
   @override
   void initState() {
     super.initState();
-    _loadRound();
+    _initService();
   }
 
-  void _loadRound() {
-    final shuffled = List<VocabWord>.from(widget.theme.words)..shuffle(Random());
-    _words = shuffled.take(_cardsPerRound).toList();
-    _currentIndex = 0;
-    _isFlipped = false;
+  Future<void> _initService() async {
+    _progressService = await ProgressService.getInstance();
+    setState(() {
+      _words = _progressService!.generateRound(widget.theme, maxCards: _cardsPerRound);
+    });
   }
 
   void _flipCard() {
@@ -37,26 +42,67 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  void _nextCard() {
-    setState(() {
-      if (_currentIndex < _words.length - 1) {
+  void _evaluate(EvalResult result) async {
+    if (_evaluated) return;
+    setState(() => _evaluated = true);
+
+    final word = _words[_currentIndex];
+    await _progressService?.recordEvaluation(
+      widget.theme.name,
+      word.italian,
+      result,
+    );
+
+    _roundResults[ProgressService.wordId(widget.theme.name, word.italian)] = result;
+
+    // Auto-advance after a short delay
+    await Future.delayed(const Duration(milliseconds: 350));
+
+    if (!mounted) return;
+
+    if (_currentIndex < _words.length - 1) {
+      setState(() {
         _currentIndex++;
         _isFlipped = false;
-      }
-    });
+        _evaluated = false;
+      });
+    } else {
+      // Round complete — show summary
+      _showRoundSummary();
+    }
   }
 
-  void _newRound() {
-    setState(() {
-      _loadRound();
-    });
-  }
+  Future<void> _showRoundSummary() async {
+    final roundResult = await _progressService?.completeRound(
+      widget.theme.name,
+      _roundResults,
+    );
 
-  bool get _isLastCard => _currentIndex >= _words.length - 1;
-  bool get _roundComplete => _isLastCard && _isFlipped;
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            RoundSummaryScreen(
+          theme: widget.theme,
+          result: roundResult!,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_progressService == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final themeColor = Color(widget.theme.colorValue);
     final word = _words[_currentIndex];
 
@@ -101,7 +147,8 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: themeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
@@ -123,7 +170,8 @@ class _GameScreenState extends State<GameScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
-                    value: (_currentIndex + (_isFlipped ? 1 : 0)) / _words.length,
+                    value:
+                        (_currentIndex + (_isFlipped ? 1 : 0)) / _words.length,
                     minHeight: 6,
                     backgroundColor: themeColor.withValues(alpha: 0.12),
                     valueColor: AlwaysStoppedAnimation<Color>(themeColor),
@@ -135,15 +183,14 @@ class _GameScreenState extends State<GameScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  _roundComplete
-                      ? 'Bravo! Round completato!'
-                      : _isFlipped
-                          ? 'Premi la freccia per continuare'
+                  _isFlipped && !_evaluated
+                      ? 'Come ti senti? Valuta la tua risposta'
+                      : _evaluated
+                          ? 'Prossima parola...'
                           : 'Come si dice in inglese? Tocca per scoprire',
                   style: TextStyle(
-                    color: _roundComplete ? themeColor : const Color(0xFF636E72),
+                    color: const Color(0xFF636E72),
                     fontSize: 14,
-                    fontWeight: _roundComplete ? FontWeight.w600 : FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -152,59 +199,23 @@ class _GameScreenState extends State<GameScreen> {
               Expanded(
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 16),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 360, maxHeight: 480),
+                      constraints:
+                          const BoxConstraints(maxWidth: 360, maxHeight: 480),
                       child: FlipCardWidget(
                         key: ValueKey('card-$_currentIndex'),
                         word: word,
                         themeColor: themeColor,
                         isFlipped: _isFlipped,
                         onTap: _flipCard,
-                        onNext: _isLastCard ? null : _nextCard,
+                        onEvaluate: _isFlipped && !_evaluated ? _evaluate : null,
                       ),
                     ),
                   ),
                 ),
               ),
-              // Bottom buttons when round complete
-              if (_roundComplete)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.home_rounded),
-                          label: const Text('Home'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: FilledButton.icon(
-                          onPressed: _newRound,
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Nuovo Round'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: themeColor,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
             ],
           ),
         ),
