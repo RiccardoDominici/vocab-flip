@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../utils/image_helper.dart';
 
-/// Displays a Wikipedia image for a keyword.
-/// Resolves the URL asynchronously, shows a placeholder while loading.
+/// Displays a Wikipedia / Wikimedia Commons image for a keyword.
+/// Resolves the URL asynchronously with fallback chain, and retries once
+/// if the resolved image itself fails to load.
 class WordImage extends StatefulWidget {
   final String keyword;
   final BoxFit fit;
@@ -22,6 +23,7 @@ class WordImage extends StatefulWidget {
 class _WordImageState extends State<WordImage> {
   String? _imageUrl;
   bool _resolved = false;
+  bool _retriedAfterLoadError = false;
 
   @override
   void initState() {
@@ -35,6 +37,7 @@ class _WordImageState extends State<WordImage> {
     if (oldWidget.keyword != widget.keyword) {
       _resolved = false;
       _imageUrl = null;
+      _retriedAfterLoadError = false;
       _resolve();
     }
   }
@@ -47,6 +50,20 @@ class _WordImageState extends State<WordImage> {
         _resolved = true;
       });
     }
+  }
+
+  /// Called when Image.network fails to load the resolved URL.
+  /// Invalidates the cache and retries resolution once so the fallback chain
+  /// can try a different source.
+  void _onLoadError() {
+    if (_retriedAfterLoadError) return; // only retry once
+    _retriedAfterLoadError = true;
+    ImageHelper.invalidate(widget.keyword);
+    setState(() {
+      _resolved = false;
+      _imageUrl = null;
+    });
+    _resolve();
   }
 
   @override
@@ -108,6 +125,10 @@ class _WordImageState extends State<WordImage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
+          // If the image itself failed to load, invalidate and retry once.
+          if (!_retriedAfterLoadError) {
+            WidgetsBinding.instance.addPostFrameCallback((_) => _onLoadError());
+          }
           return Container(
             color: Colors.grey[200],
             child: Icon(
