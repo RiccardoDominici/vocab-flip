@@ -2,8 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../data/vocabulary.dart';
 import '../models/word_progress.dart';
-import '../utils/image_helper.dart';
 import '../utils/speech.dart';
+import 'word_image.dart';
 
 class FlipCardWidget extends StatefulWidget {
   final VocabWord word;
@@ -107,8 +107,6 @@ class _FrontCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = ImageHelper.wordImageUrl(word.imageSearchTerm, w: 400, h: 600);
-
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -128,35 +126,10 @@ class _FrontCard extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             // Full-bleed image
-            Image.network(
-              imageUrl,
+            WordImage(
+              keyword: word.imageSearchTerm,
               fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  color: themeColor.withValues(alpha: 0.15),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: themeColor,
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  ),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: themeColor.withValues(alpha: 0.15),
-                  child: Icon(
-                    Icons.image_not_supported_outlined,
-                    size: 48,
-                    color: themeColor.withValues(alpha: 0.4),
-                  ),
-                );
-              },
+              borderRadius: BorderRadius.zero,
             ),
             // Gradient scrim at bottom
             Positioned(
@@ -244,8 +217,6 @@ class _BackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = ImageHelper.wordImageUrl(word.imageSearchTerm, w: 400, h: 600);
-
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -265,12 +236,10 @@ class _BackCard extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             // Background image (dimmed)
-            Image.network(
-              imageUrl,
+            WordImage(
+              keyword: word.imageSearchTerm,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(color: themeColor);
-              },
+              borderRadius: BorderRadius.zero,
             ),
             // Colored gradient overlay
             DecoratedBox(
