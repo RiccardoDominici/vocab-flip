@@ -13,9 +13,9 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late List<VocabWord> _currentWords;
-  final Set<int> _revealedIndices = {};
-  int? _currentFlippedIndex;
+  late List<VocabWord> _words;
+  int _currentIndex = 0;
+  bool _isFlipped = false;
   static const int _cardsPerRound = 10;
 
   @override
@@ -26,20 +26,22 @@ class _GameScreenState extends State<GameScreen> {
 
   void _loadRound() {
     final shuffled = List<VocabWord>.from(widget.theme.words)..shuffle(Random());
-    _currentWords = shuffled.take(_cardsPerRound).toList();
-    _revealedIndices.clear();
-    _currentFlippedIndex = null;
+    _words = shuffled.take(_cardsPerRound).toList();
+    _currentIndex = 0;
+    _isFlipped = false;
   }
 
-  void _onCardTapped(int index) {
+  void _flipCard() {
+    if (!_isFlipped) {
+      setState(() => _isFlipped = true);
+    }
+  }
+
+  void _nextCard() {
     setState(() {
-      if (_currentFlippedIndex == index) {
-        // Tapping the already-flipped card: mark as revealed and close
-        _revealedIndices.add(index);
-        _currentFlippedIndex = null;
-      } else if (!_revealedIndices.contains(index)) {
-        // Flip new card (closes the previous one automatically)
-        _currentFlippedIndex = index;
+      if (_currentIndex < _words.length - 1) {
+        _currentIndex++;
+        _isFlipped = false;
       }
     });
   }
@@ -50,11 +52,13 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  bool get _isLastCard => _currentIndex >= _words.length - 1;
+  bool get _roundComplete => _isLastCard && _isFlipped;
+
   @override
   Widget build(BuildContext context) {
     final themeColor = Color(widget.theme.colorValue);
-    final totalRevealed = _revealedIndices.length;
-    final allRevealed = totalRevealed >= _currentWords.length;
+    final word = _words[_currentIndex];
 
     return Scaffold(
       body: Container(
@@ -97,16 +101,13 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: themeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        '$totalRevealed / ${_currentWords.length}',
+                        '${_currentIndex + 1} / ${_words.length}',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: themeColor,
@@ -122,9 +123,7 @@ class _GameScreenState extends State<GameScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
-                    value: _currentWords.isEmpty
-                        ? 0
-                        : totalRevealed / _currentWords.length,
+                    value: (_currentIndex + (_isFlipped ? 1 : 0)) / _words.length,
                     minHeight: 6,
                     backgroundColor: themeColor.withValues(alpha: 0.12),
                     valueColor: AlwaysStoppedAnimation<Color>(themeColor),
@@ -132,59 +131,46 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              // Hint text
+              // Hint
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  allRevealed
-                      ? 'Bravo! Hai completato il round!'
-                      : 'Tocca una card per vedere la traduzione, poi tocca di nuovo per confermare',
+                  _roundComplete
+                      ? 'Bravo! Round completato!'
+                      : _isFlipped
+                          ? 'Premi la freccia per continuare'
+                          : 'Come si dice in inglese? Tocca per scoprire',
                   style: TextStyle(
-                    color: allRevealed ? themeColor : const Color(0xFF636E72),
+                    color: _roundComplete ? themeColor : const Color(0xFF636E72),
                     fontSize: 14,
-                    fontWeight: allRevealed ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: _roundComplete ? FontWeight.w600 : FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: 12),
-              // Cards grid
+              // Card - centered
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 200,
-                      mainAxisSpacing: 14,
-                      crossAxisSpacing: 14,
-                      childAspectRatio: 0.85,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 360, maxHeight: 480),
+                      child: FlipCardWidget(
+                        key: ValueKey('card-$_currentIndex'),
+                        word: word,
+                        themeColor: themeColor,
+                        isFlipped: _isFlipped,
+                        onTap: _flipCard,
+                        onNext: _isLastCard ? null : _nextCard,
+                      ),
                     ),
-                    itemCount: _currentWords.length,
-                    itemBuilder: (context, index) {
-                      final isRevealed = _revealedIndices.contains(index);
-                      final isCurrentlyFlipped = _currentFlippedIndex == index;
-                      return AnimatedOpacity(
-                        opacity: isRevealed ? 0.5 : 1.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: AbsorbPointer(
-                          absorbing: isRevealed,
-                          child: FlipCardWidget(
-                            key: ValueKey('card-$index-${_currentWords[index].english}'),
-                            word: _currentWords[index],
-                            themeColor: themeColor,
-                            isFlipped: isCurrentlyFlipped || isRevealed,
-                            onTap: () => _onCardTapped(index),
-                          ),
-                        ),
-                      );
-                    },
                   ),
                 ),
               ),
-              // Bottom buttons
-              if (allRevealed)
+              // Bottom buttons when round complete
+              if (_roundComplete)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                   child: Row(
                     children: [
                       Expanded(

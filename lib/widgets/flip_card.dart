@@ -8,6 +8,7 @@ class FlipCardWidget extends StatefulWidget {
   final Color themeColor;
   final bool isFlipped;
   final VoidCallback onTap;
+  final VoidCallback? onNext;
 
   const FlipCardWidget({
     super.key,
@@ -15,6 +16,7 @@ class FlipCardWidget extends StatefulWidget {
     required this.themeColor,
     required this.isFlipped,
     required this.onTap,
+    this.onNext,
   });
 
   @override
@@ -61,7 +63,7 @@ class _FlipCardWidgetState extends State<FlipCardWidget>
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: widget.onTap,
+      onTap: widget.isFlipped ? null : widget.onTap,
       child: AnimatedBuilder(
         animation: _animation,
         builder: (context, child) {
@@ -80,6 +82,7 @@ class _FlipCardWidgetState extends State<FlipCardWidget>
                     child: _BackCard(
                       word: widget.word,
                       themeColor: widget.themeColor,
+                      onNext: widget.onNext,
                     ),
                   )
                 : _FrontCard(
@@ -102,48 +105,56 @@ class _FrontCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
+      height: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: themeColor.withValues(alpha: 0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              word.emoji,
-              style: const TextStyle(fontSize: 48),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                word.italian,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2D3436),
-                ),
-                textAlign: TextAlign.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            word.emoji,
+            style: const TextStyle(fontSize: 80),
+          ),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              word.italian,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D3436),
               ),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            Text(
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: themeColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
               'Tocca per girare',
               style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey[400],
+                fontSize: 14,
+                color: themeColor,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -152,12 +163,19 @@ class _FrontCard extends StatelessWidget {
 class _BackCard extends StatelessWidget {
   final VocabWord word;
   final Color themeColor;
+  final VoidCallback? onNext;
 
-  const _BackCard({required this.word, required this.themeColor});
+  const _BackCard({
+    required this.word,
+    required this.themeColor,
+    this.onNext,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
+      height: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -167,76 +185,101 @@ class _BackCard extends StatelessWidget {
             themeColor.withValues(alpha: 0.8),
           ],
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: themeColor.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              word.emoji,
-              style: const TextStyle(fontSize: 36),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            word.emoji,
+            style: const TextStyle(fontSize: 56),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              word.english,
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                word.english,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              word.italian,
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white.withValues(alpha: 0.75),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Audio button
+          GestureDetector(
+            onTap: () => SpeechUtil.speak(word.english),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.volume_up_rounded, color: Colors.white, size: 22),
+                  SizedBox(width: 6),
+                  Text(
+                    'Ascolta',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                word.italian,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.8),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 10),
+          ),
+          const SizedBox(height: 20),
+          // Next button
+          if (onNext != null)
             GestureDetector(
-              onTap: () => SpeechUtil.speak(word.english),
+              onTap: onNext,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.volume_up_rounded, color: Colors.white, size: 20),
-                    SizedBox(width: 4),
-                    Text(
-                      'Ascolta',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
+                child: Icon(
+                  Icons.arrow_forward_rounded,
+                  color: themeColor,
+                  size: 28,
+                ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
