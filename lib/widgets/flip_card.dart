@@ -2,8 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../data/vocabulary.dart';
 import '../models/word_progress.dart';
+import '../utils/image_helper.dart';
 import '../utils/speech.dart';
-import 'word_image.dart';
 
 class FlipCardWidget extends StatefulWidget {
   final VocabWord word;
@@ -98,6 +98,7 @@ class _FlipCardWidgetState extends State<FlipCardWidget>
   }
 }
 
+/// Full-bleed image card with the Italian word overlaid at the bottom.
 class _FrontCard extends StatelessWidget {
   final VocabWord word;
   final Color themeColor;
@@ -106,63 +107,130 @@ class _FrontCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = ImageHelper.wordImageUrl(word.imageSearchTerm, w: 400, h: 600);
+
     return Container(
       width: double.infinity,
       height: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: themeColor.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          WordImage(
-            keyword: word.imageSearchTerm,
-            size: 120,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              word.italian,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3436),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Full-bleed image
+            Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  color: themeColor.withValues(alpha: 0.15),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: themeColor,
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: themeColor.withValues(alpha: 0.15),
+                  child: Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 48,
+                    color: themeColor.withValues(alpha: 0.4),
+                  ),
+                );
+              },
+            ),
+            // Gradient scrim at bottom
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 180,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.7),
+                    ],
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: themeColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'Tocca per girare',
-              style: TextStyle(
-                fontSize: 14,
-                color: themeColor,
-                fontWeight: FontWeight.w500,
+            // Text overlay
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: 28,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    word.italian,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 12,
+                          color: Colors.black54,
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: const Text(
+                      'Tocca per girare',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
+/// Back card: image background with a colored gradient overlay.
 class _BackCard extends StatelessWidget {
   final VocabWord word;
   final Color themeColor;
@@ -176,18 +244,12 @@ class _BackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = ImageHelper.wordImageUrl(word.imageSearchTerm, w: 400, h: 600);
+
     return Container(
       width: double.infinity,
       height: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            themeColor,
-            themeColor.withValues(alpha: 0.8),
-          ],
-        ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -197,111 +259,131 @@ class _BackCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          WordImage(
-            keyword: word.imageSearchTerm,
-            size: 80,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              word.english,
-              style: const TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background image (dimmed)
+            Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(color: themeColor);
+              },
             ),
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              word.italian,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white.withValues(alpha: 0.75),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Audio button
-          GestureDetector(
-            onTap: () => SpeechUtil.speak(word.english),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            // Colored gradient overlay
+            DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.volume_up_rounded, color: Colors.white, size: 20),
-                  SizedBox(width: 4),
-                  Text(
-                    'Ascolta',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    themeColor.withValues(alpha: 0.75),
+                    themeColor.withValues(alpha: 0.92),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          // Evaluation buttons
-          if (onEvaluate != null)
+            // Content
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const Spacer(flex: 2),
+                  // English (answer)
                   Text(
-                    'La sapevi?',
+                    word.english,
+                    style: const TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    word.italian,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 13,
+                      fontSize: 17,
+                      color: Colors.white.withValues(alpha: 0.75),
                       fontWeight: FontWeight.w500,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _EvalButton(
-                        label: 'No',
-                        icon: Icons.close_rounded,
-                        color: const Color(0xFFFF4757),
-                        onTap: () => onEvaluate!(EvalResult.unknown),
+                  const SizedBox(height: 16),
+                  // Audio button
+                  GestureDetector(
+                    onTap: () => SpeechUtil.speak(word.english),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                      const SizedBox(width: 10),
-                      _EvalButton(
-                        label: 'Incerto',
-                        icon: Icons.help_outline_rounded,
-                        color: const Color(0xFFFFA502),
-                        onTap: () => onEvaluate!(EvalResult.uncertain),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.volume_up_rounded, color: Colors.white, size: 20),
+                          SizedBox(width: 4),
+                          Text(
+                            'Ascolta',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 10),
-                      _EvalButton(
-                        label: 'La so!',
-                        icon: Icons.check_rounded,
-                        color: const Color(0xFF2ED573),
-                        onTap: () => onEvaluate!(EvalResult.known),
-                      ),
-                    ],
+                    ),
                   ),
+                  const Spacer(flex: 2),
+                  // Evaluation buttons
+                  if (onEvaluate != null) ...[
+                    Text(
+                      'La sapevi?',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _EvalButton(
+                          label: 'No',
+                          icon: Icons.close_rounded,
+                          color: const Color(0xFFFF4757),
+                          onTap: () => onEvaluate!(EvalResult.unknown),
+                        ),
+                        const SizedBox(width: 10),
+                        _EvalButton(
+                          label: 'Incerto',
+                          icon: Icons.help_outline_rounded,
+                          color: const Color(0xFFFFA502),
+                          onTap: () => onEvaluate!(EvalResult.uncertain),
+                        ),
+                        const SizedBox(width: 10),
+                        _EvalButton(
+                          label: 'La so!',
+                          icon: Icons.check_rounded,
+                          color: const Color(0xFF2ED573),
+                          onTap: () => onEvaluate!(EvalResult.known),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

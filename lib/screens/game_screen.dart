@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../data/vocabulary.dart';
 import '../models/word_progress.dart';
 import '../services/progress_service.dart';
+import '../utils/image_helper.dart';
 import '../widgets/flip_card.dart';
 import 'round_summary_screen.dart';
 
@@ -34,6 +35,15 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       _words = _progressService!.generateRound(widget.theme, maxCards: _cardsPerRound);
     });
+    _precacheUpcoming();
+  }
+
+  /// Precache images for the next card (and the one after) to avoid lag.
+  void _precacheUpcoming() {
+    if (!mounted) return;
+    for (var i = _currentIndex + 1; i <= _currentIndex + 2 && i < _words.length; i++) {
+      ImageHelper.precacheWord(context, _words[i].imageSearchTerm);
+    }
   }
 
   void _flipCard() {
@@ -65,6 +75,7 @@ class _GameScreenState extends State<GameScreen> {
         _isFlipped = false;
         _evaluated = false;
       });
+      _precacheUpcoming();
     } else {
       _showRoundSummary();
     }
