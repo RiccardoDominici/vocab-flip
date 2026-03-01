@@ -508,7 +508,7 @@ class _BackCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 10),
                         _EvalButton(
-                          label: 'Accettala',
+                          label: 'Giusta',
                           icon: Icons.check_rounded,
                           color: const Color(0xFF2ED573),
                           onTap: () => onEvaluate!(EvalResult.uncertain),
@@ -567,7 +567,7 @@ class _DiffVisualization extends StatelessWidget {
         children: [
           // User's input label
           Text(
-            'Hai scritto:',
+            'Correzione:',
             style: TextStyle(
               fontSize: 11,
               color: Colors.white.withValues(alpha: 0.6),
