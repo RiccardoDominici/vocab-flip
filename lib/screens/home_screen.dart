@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/vocabulary.dart';
@@ -108,10 +108,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: const Color(0xFF636E72),
                                 ),
                       ),
-                      if (kIsWeb) ...[
-                        const SizedBox(height: 16),
-                        _ApkDownloadButton(),
-                      ],
                       const SizedBox(height: 24),
                       // CEFR Level Selector
                       _CefrSelector(
@@ -165,6 +161,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+              if (kIsWeb && defaultTargetPlatform != TargetPlatform.iOS)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 24, bottom: 16),
+                    child: _ApkDownloadButton(),
+                  ),
+                ),
               const SliverToBoxAdapter(
                 child: SizedBox(height: 32),
               ),
@@ -219,6 +222,8 @@ class _CefrSelector extends StatelessWidget {
 }
 
 class _ApkDownloadButton extends StatelessWidget {
+  const _ApkDownloadButton();
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -231,42 +236,30 @@ class _ApkDownloadButton extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: const Color(0xFF2D3436),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Row(
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.android_rounded, color: const Color(0xFF2ED573), size: 22),
-            const SizedBox(width: 8),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Scarica per Android',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-                Text(
-                  'APK diretta \u2014 Android only',
-                  style: TextStyle(
-                    color: Color(0xFF636E72),
-                    fontSize: 10,
-                  ),
-                ),
-              ],
+            Icon(Icons.android_rounded, color: Color(0xFF2ED573), size: 16),
+            SizedBox(width: 6),
+            Text(
+              'Scarica per Android',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+              ),
             ),
           ],
         ),
