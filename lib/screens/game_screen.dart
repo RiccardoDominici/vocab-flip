@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../data/vocabulary.dart';
 import '../models/word_progress.dart';
 import '../services/progress_service.dart';
+import '../utils/fuzzy_match.dart';
 import '../utils/image_helper.dart';
 import '../widgets/flip_card.dart';
 import 'round_summary_screen.dart';
@@ -24,10 +25,22 @@ class _GameScreenState extends State<GameScreen> {
   ProgressService? _progressService;
   final Map<String, EvalResult> _roundResults = {};
 
+  /// Stores the current user's typed answer.
+  final TextEditingController _answerController = TextEditingController();
+
+  /// The match result for the current card (null until submitted).
+  MatchResult? _currentMatch;
+
   @override
   void initState() {
     super.initState();
     _initService();
+  }
+
+  @override
+  void dispose() {
+    _answerController.dispose();
+    super.dispose();
   }
 
   Future<void> _initService() async {
@@ -46,10 +59,34 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  void _flipCard() {
-    if (!_isFlipped) {
-      setState(() => _isFlipped = true);
+  /// Called when user submits their typed answer (or taps "non lo so").
+  void _submitAnswer() {
+    if (_isFlipped) return;
+
+    final word = _words[_currentIndex];
+    final userInput = _answerController.text.trim();
+
+    MatchResult? match;
+    if (userInput.isNotEmpty) {
+      match = FuzzyMatch.evaluate(userInput, word.english);
     }
+
+    setState(() {
+      _isFlipped = true;
+      _currentMatch = match;
+    });
+
+    // Auto-evaluate for correct and wrong answers.
+    // Close matches let the user choose.
+    if (match == null) {
+      // User skipped — treat as unknown.
+      _evaluate(EvalResult.unknown);
+    } else if (match.grade == MatchGrade.correct) {
+      _evaluate(EvalResult.known);
+    } else if (match.grade == MatchGrade.wrong) {
+      _evaluate(EvalResult.unknown);
+    }
+    // MatchGrade.close — user picks via buttons on the back card.
   }
 
   void _evaluate(EvalResult result) async {
@@ -64,21 +101,29 @@ class _GameScreenState extends State<GameScreen> {
     );
 
     _roundResults[ProgressService.wordId(widget.theme.name, word.italian)] = result;
+  }
 
-    await Future.delayed(const Duration(milliseconds: 350));
-
-    if (!mounted) return;
-
+  void _nextCard() {
     if (_currentIndex < _words.length - 1) {
+      _answerController.clear();
       setState(() {
         _currentIndex++;
         _isFlipped = false;
         _evaluated = false;
+        _currentMatch = null;
       });
       _precacheUpcoming();
     } else {
       _showRoundSummary();
     }
+  }
+
+  void _retryCard() {
+    _answerController.clear();
+    setState(() {
+      _isFlipped = false;
+      _currentMatch = null;
+    });
   }
 
   Future<void> _showRoundSummary() async {
@@ -104,6 +149,24 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+  String get _hintText {
+    if (_isFlipped && !_evaluated) {
+      if (_currentMatch?.grade == MatchGrade.close) {
+        return 'Risposta vicina! Decidi tu come contarla';
+      }
+      if (_currentMatch?.grade == MatchGrade.correct) {
+        return 'Risposta corretta!';
+      }
+      if (_currentMatch == null || _currentMatch?.grade == MatchGrade.wrong) {
+        return 'Prossima parola...';
+      }
+    }
+    if (_evaluated) {
+      return 'Vai avanti o riprova';
+    }
+    return 'Scrivi la traduzione in inglese';
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_progressService == null) {
@@ -116,6 +179,8 @@ class _GameScreenState extends State<GameScreen> {
     final word = _words[_currentIndex];
 
     return Scaffold(
+      // Prevent keyboard from pushing layout up excessively
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -192,11 +257,7 @@ class _GameScreenState extends State<GameScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  _isFlipped && !_evaluated
-                      ? 'Come ti senti? Valuta la tua risposta'
-                      : _evaluated
-                          ? 'Prossima parola...'
-                          : 'Come si dice in inglese? Tocca per scoprire',
+                  _hintText,
                   style: const TextStyle(
                     color: Color(0xFF636E72),
                     fontSize: 14,
@@ -213,13 +274,19 @@ class _GameScreenState extends State<GameScreen> {
                     child: ConstrainedBox(
                       constraints:
                           const BoxConstraints(maxWidth: 360, maxHeight: 480),
-                      child: FlipCardWidget(
-                        key: ValueKey('card-$_currentIndex'),
-                        word: word,
-                        themeColor: themeColor,
-                        isFlipped: _isFlipped,
-                        onTap: _flipCard,
-                        onEvaluate: _isFlipped && !_evaluated ? _evaluate : null,
+                      child: AnswerCapture(
+                        controller: _answerController,
+                        child: FlipCardWidget(
+                          key: ValueKey('card-$_currentIndex'),
+                          word: word,
+                          themeColor: themeColor,
+                          isFlipped: _isFlipped,
+                          onTap: _submitAnswer,
+                          onEvaluate: _isFlipped && !_evaluated ? _evaluate : null,
+                          onNext: _isFlipped && _evaluated ? _nextCard : null,
+                          onRetry: _isFlipped && _evaluated ? _retryCard : null,
+                          matchResult: _currentMatch,
+                        ),
                       ),
                     ),
                   ),
@@ -230,5 +297,27 @@ class _GameScreenState extends State<GameScreen> {
         ),
       ),
     );
+  }
+}
+
+/// An InheritedWidget that provides the answer TextEditingController
+/// to the front card's text field.
+class AnswerCapture extends InheritedWidget {
+  final TextEditingController controller;
+
+  const AnswerCapture({
+    super.key,
+    required this.controller,
+    required super.child,
+  });
+
+  static TextEditingController of(BuildContext context) {
+    final widget = context.dependOnInheritedWidgetOfExactType<AnswerCapture>();
+    return widget!.controller;
+  }
+
+  @override
+  bool updateShouldNotify(AnswerCapture oldWidget) {
+    return controller != oldWidget.controller;
   }
 }

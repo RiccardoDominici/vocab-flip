@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 enum EvalResult { known, uncertain, unknown }
 
 class WordProgress {
