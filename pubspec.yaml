@@ -38,6 +38,12 @@ dependencies:
   url_launcher: ^6.3.2
   http: ^1.6.0
   flutter_tts: ^4.2.0
+  flutter_animate: ^4.5.2
+  google_fonts: ^6.2.1
+  flutter_screenutil: ^5.9.3
+  shimmer: ^3.0.0
+  glassmorphism_ui: ^0.3.0
+  iconsax_flutter: ^1.0.0+1
 
 dev_dependencies:
   flutter_test:

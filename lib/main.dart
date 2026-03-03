@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'screens/home_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const VocabFlipApp());
@@ -10,15 +12,18 @@ class VocabFlipApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Vocab Flip',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6C63FF),
-        brightness: Brightness.light,
-        useMaterial3: true,
-      ),
-      home: const HomeScreen(),
+    return ScreenUtilInit(
+      designSize: const Size(AppTheme.designWidth, AppTheme.designHeight),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'Vocab Flip',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          home: const HomeScreen(),
+        );
+      },
     );
   }
 }

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import '../data/vocabulary.dart';
 import '../models/word_progress.dart';
+import '../theme/app_theme.dart';
 import 'game_screen.dart';
 
 class RoundSummaryScreen extends StatelessWidget {
@@ -27,83 +32,86 @@ class RoundSummaryScreen extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF)],
-          ),
-        ),
+        decoration: AppTheme.gradientBackground,
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24.w),
             child: Column(
               children: [
                 const Spacer(flex: 1),
                 Icon(
                   result.unknownCount == 0
-                      ? Icons.emoji_events_rounded
-                      : Icons.bar_chart_rounded,
-                  size: 64,
+                      ? Iconsax.cup
+                      : Iconsax.chart,
+                  size: 64.sp,
                   color: result.unknownCount == 0
-                      ? const Color(0xFFFFD700)
+                      ? AppTheme.gold
                       : themeColor,
-                ),
-                const SizedBox(height: 16),
+                )
+                    .animate()
+                    .fadeIn(duration: 600.ms)
+                    .scale(begin: const Offset(0.6, 0.6)),
+                SizedBox(height: 16.h),
                 Text(
                   'Round ${result.round} completato!',
-                  style: const TextStyle(
-                    fontSize: 26,
+                  style: GoogleFonts.poppins(
+                    fontSize: 26.sp,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3436),
+                    color: AppTheme.textPrimary,
                   ),
-                ),
-                const SizedBox(height: 8),
+                )
+                    .animate()
+                    .fadeIn(delay: 200.ms, duration: 500.ms)
+                    .slideY(begin: 0.2),
+                SizedBox(height: 8.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(theme.icon, size: 20, color: themeColor),
-                    const SizedBox(width: 6),
+                    Icon(theme.icon, size: 20.sp, color: themeColor),
+                    SizedBox(width: 6.w),
                     Text(
                       theme.name,
-                      style: TextStyle(
-                        fontSize: 18,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18.sp,
                         color: themeColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 32),
+                ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+                SizedBox(height: 32.h),
                 // Stats cards
                 Row(
                   children: [
                     _StatCard(
-                      icon: Icons.check_circle_rounded,
+                      icon: Iconsax.tick_circle,
                       label: 'La so!',
                       count: result.knownCount,
                       percent: knownPct,
-                      color: const Color(0xFF2ED573),
+                      color: AppTheme.success,
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12.w),
                     _StatCard(
-                      icon: Icons.help_rounded,
+                      icon: Iconsax.warning_2,
                       label: 'Incerto',
                       count: result.uncertainCount,
                       percent: uncertainPct,
-                      color: const Color(0xFFFFA502),
+                      color: AppTheme.warning,
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12.w),
                     _StatCard(
-                      icon: Icons.cancel_rounded,
+                      icon: Iconsax.close_circle,
                       label: 'Non la sapevo',
                       count: result.unknownCount,
                       percent: unknownPct,
-                      color: const Color(0xFFFF4757),
+                      color: AppTheme.error,
                     ),
                   ],
-                ),
-                const SizedBox(height: 24),
+                )
+                    .animate()
+                    .fadeIn(delay: 400.ms, duration: 500.ms)
+                    .slideY(begin: 0.15),
+                SizedBox(height: 24.h),
                 // Progress bar visualization
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
@@ -114,56 +122,46 @@ class RoundSummaryScreen extends StatelessWidget {
                         if (result.knownCount > 0)
                           Expanded(
                             flex: result.knownCount,
-                            child: Container(
-                                color: const Color(0xFF2ED573)),
+                            child: Container(color: AppTheme.success),
                           ),
                         if (result.uncertainCount > 0)
                           Expanded(
                             flex: result.uncertainCount,
-                            child: Container(
-                                color: const Color(0xFFFFA502)),
+                            child: Container(color: AppTheme.warning),
                           ),
                         if (result.unknownCount > 0)
                           Expanded(
                             flex: result.unknownCount,
-                            child: Container(
-                                color: const Color(0xFFFF4757)),
+                            child: Container(color: AppTheme.error),
                           ),
                       ],
                     ),
                   ),
-                ),
+                ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
                 // Badges
                 if (result.newBadges.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  ...result.newBadges.map((badge) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                  SizedBox(height: 24.h),
+                  ...result.newBadges.asMap().entries.map((entry) => Padding(
+                        padding: EdgeInsets.only(bottom: 8.h),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                themeColor.withValues(alpha: 0.15),
-                                themeColor.withValues(alpha: 0.05),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: themeColor.withValues(alpha: 0.3),
-                            ),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 20.w, vertical: 12.h),
+                          decoration: AppTheme.accentGlassCard(
+                            color: themeColor,
+                            opacity: 0.12,
+                            borderRadius: 16,
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.military_tech_rounded,
-                                  size: 24, color: themeColor),
-                              const SizedBox(width: 8),
+                              Icon(Iconsax.medal_star,
+                                  size: 24.sp, color: themeColor),
+                              SizedBox(width: 8.w),
                               Flexible(
                                 child: Text(
-                                  badge,
-                                  style: TextStyle(
-                                    fontSize: 15,
+                                  entry.value,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15.sp,
                                     fontWeight: FontWeight.w600,
                                     color: themeColor,
                                   ),
@@ -171,7 +169,10 @@ class RoundSummaryScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ),
+                        )
+                            .animate()
+                            .fadeIn(delay: (600 + entry.key * 150).ms)
+                            .slideX(begin: 0.2),
                       )),
                 ],
                 const Spacer(flex: 2),
@@ -181,17 +182,20 @@ class RoundSummaryScreen extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.home_rounded),
-                        label: const Text('Home'),
+                        icon: Icon(Iconsax.home_2, size: 20.sp),
+                        label: Text(
+                          'Home',
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                        ),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12.w),
                     Expanded(
                       flex: 2,
                       child: FilledButton.icon(
@@ -211,11 +215,14 @@ class RoundSummaryScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Nuovo Round'),
+                        icon: Icon(Iconsax.refresh, size: 20.sp),
+                        label: Text(
+                          'Nuovo Round',
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                        ),
                         style: FilledButton.styleFrom(
                           backgroundColor: themeColor,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -223,7 +230,10 @@ class RoundSummaryScreen extends StatelessWidget {
                       ),
                     ),
                   ],
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 600.ms, duration: 400.ms)
+                    .slideY(begin: 0.2),
               ],
             ),
           ),
@@ -252,45 +262,38 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 8.w),
+        decoration: AppTheme.glassCard(
+          opacity: 0.7,
+          shadowColor: color,
         ),
         child: Column(
           children: [
-            Icon(icon, size: 28, color: color),
-            const SizedBox(height: 6),
+            Icon(icon, size: 28.sp, color: color),
+            SizedBox(height: 6.h),
             Text(
               '$count',
-              style: TextStyle(
-                fontSize: 28,
+              style: GoogleFonts.poppins(
+                fontSize: 28.sp,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
             ),
-            const SizedBox(height: 2),
+            SizedBox(height: 2.h),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF636E72),
+              style: GoogleFonts.poppins(
+                fontSize: 11.sp,
+                color: AppTheme.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6.h),
             Text(
               '${(percent * 100).round()}%',
-              style: TextStyle(
-                fontSize: 13,
+              style: GoogleFonts.poppins(
+                fontSize: 13.sp,
                 fontWeight: FontWeight.w600,
                 color: color,
               ),

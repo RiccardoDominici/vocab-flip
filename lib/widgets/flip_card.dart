@@ -1,8 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import '../data/vocabulary.dart';
 import '../models/word_progress.dart';
 import '../screens/game_screen.dart' show AnswerCapture;
+import '../theme/app_theme.dart';
 import '../utils/fuzzy_match.dart';
 import '../utils/speech.dart';
 import 'word_image.dart';
@@ -156,9 +161,9 @@ class _FrontCardState extends State<_FrontCard> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: widget.themeColor.withValues(alpha: 0.25),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -186,7 +191,7 @@ class _FrontCardState extends State<_FrontCard> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.8),
+                      Colors.black.withValues(alpha: 0.85),
                     ],
                   ),
                 ),
@@ -194,21 +199,21 @@ class _FrontCardState extends State<_FrontCard> {
             ),
             // Text overlay with input
             Positioned(
-              left: 20,
-              right: 20,
-              bottom: 24,
+              left: 20.w,
+              right: 20.w,
+              bottom: 24.h,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     widget.word.italian,
-                    style: const TextStyle(
-                      fontSize: 32,
+                    style: GoogleFonts.poppins(
+                      fontSize: 30.sp,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                       letterSpacing: 0.3,
                       shadows: [
-                        Shadow(
+                        const Shadow(
                           blurRadius: 12,
                           color: Colors.black54,
                         ),
@@ -216,14 +221,14 @@ class _FrontCardState extends State<_FrontCard> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   // Text input field
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -233,22 +238,22 @@ class _FrontCardState extends State<_FrontCard> {
                             controller: textController,
                             focusNode: _focusNode,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
-                              fontSize: 18,
+                              fontSize: 17.sp,
                               fontWeight: FontWeight.w600,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Scrivi in inglese...',
-                              hintStyle: TextStyle(
+                              hintStyle: GoogleFonts.poppins(
                                 color: Colors.white.withValues(alpha: 0.5),
-                                fontSize: 16,
+                                fontSize: 15.sp,
                                 fontWeight: FontWeight.w400,
                               ),
                               border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 14.h,
                               ),
                             ),
                             textInputAction: TextInputAction.done,
@@ -258,38 +263,39 @@ class _FrontCardState extends State<_FrontCard> {
                         GestureDetector(
                           onTap: _handleSubmit,
                           child: Container(
-                            margin: const EdgeInsets.only(right: 6),
-                            padding: const EdgeInsets.all(10),
+                            margin: EdgeInsets.only(right: 6.w),
+                            padding: EdgeInsets.all(10.w),
                             decoration: BoxDecoration(
                               color: widget.themeColor,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
-                              Icons.send_rounded,
+                            child: Icon(
+                              Iconsax.send_1,
                               color: Colors.white,
-                              size: 20,
+                              size: 20.sp,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   GestureDetector(
                     onTap: widget.onSubmit,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 14.w, vertical: 6.h),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.2),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Non lo so, mostra risposta',
-                        style: TextStyle(
-                          fontSize: 12,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12.sp,
                           color: Colors.white70,
                           fontWeight: FontWeight.w500,
                         ),
@@ -297,7 +303,7 @@ class _FrontCardState extends State<_FrontCard> {
                     ),
                   ),
                 ],
-              ),
+              ).animate().fadeIn(duration: 400.ms),
             ),
           ],
         ),
@@ -327,22 +333,22 @@ class _BackCard extends StatelessWidget {
   Color _gradeColor(MatchGrade grade) {
     switch (grade) {
       case MatchGrade.correct:
-        return const Color(0xFF2ED573);
+        return AppTheme.success;
       case MatchGrade.close:
-        return const Color(0xFFFFA502);
+        return AppTheme.warning;
       case MatchGrade.wrong:
-        return const Color(0xFFFF4757);
+        return AppTheme.error;
     }
   }
 
   IconData _gradeIcon(MatchGrade grade) {
     switch (grade) {
       case MatchGrade.correct:
-        return Icons.check_circle_rounded;
+        return Iconsax.tick_circle;
       case MatchGrade.close:
-        return Icons.info_rounded;
+        return Iconsax.info_circle;
       case MatchGrade.wrong:
-        return Icons.cancel_rounded;
+        return Iconsax.close_circle;
     }
   }
 
@@ -370,8 +376,8 @@ class _BackCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: overlayColor.withValues(alpha: 0.35),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -401,7 +407,7 @@ class _BackCard extends StatelessWidget {
             ),
             // Content
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -409,7 +415,8 @@ class _BackCard extends StatelessWidget {
                   // Grade badge (if we have a match result)
                   if (grade != null) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 16.w, vertical: 8.h),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(24),
@@ -417,68 +424,75 @@ class _BackCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(_gradeIcon(grade), color: Colors.white, size: 20),
-                          const SizedBox(width: 6),
+                          Icon(_gradeIcon(grade),
+                              color: Colors.white, size: 20.sp),
+                          SizedBox(width: 6.w),
                           Text(
                             _gradeLabel(grade),
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
-                              fontSize: 15,
+                              fontSize: 15.sp,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                    )
+                        .animate()
+                        .fadeIn(duration: 300.ms)
+                        .scale(begin: const Offset(0.8, 0.8)),
+                    SizedBox(height: 16.h),
                   ],
                   // English (answer)
                   Text(
                     word.english,
-                    style: const TextStyle(
-                      fontSize: 34,
+                    style: GoogleFonts.poppins(
+                      fontSize: 32.sp,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                       letterSpacing: 0.3,
                     ),
                     textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
+                  ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
+                  SizedBox(height: 4.h),
                   Text(
                     word.italian,
-                    style: TextStyle(
-                      fontSize: 17,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16.sp,
                       color: Colors.white.withValues(alpha: 0.75),
                       fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   // Diff visualization (for close/wrong answers)
-                  if (matchResult != null && grade != MatchGrade.correct) ...[
-                    const SizedBox(height: 16),
+                  if (matchResult != null &&
+                      grade != MatchGrade.correct) ...[
+                    SizedBox(height: 16.h),
                     _DiffVisualization(matchResult: matchResult!),
                   ],
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   // Audio button
                   GestureDetector(
                     onTap: () => SpeechUtil.speak(word.english),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 16.w, vertical: 8.h),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.volume_up_rounded, color: Colors.white, size: 20),
-                          SizedBox(width: 4),
+                          Icon(Iconsax.volume_high,
+                              color: Colors.white, size: 20.sp),
+                          SizedBox(width: 4.w),
                           Text(
                             'Ascolta',
-                            style: TextStyle(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              fontSize: 14.sp,
                             ),
                           ),
                         ],
@@ -487,30 +501,31 @@ class _BackCard extends StatelessWidget {
                   ),
                   const Spacer(flex: 2),
                   // Self-override buttons (only for close matches, before evaluation)
-                  if (onEvaluate != null && grade == MatchGrade.close) ...[
+                  if (onEvaluate != null &&
+                      grade == MatchGrade.close) ...[
                     Text(
                       'Come la consideri?',
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                         color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 13,
+                        fontSize: 13.sp,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _EvalButton(
                           label: 'Sbagliata',
-                          icon: Icons.close_rounded,
-                          color: const Color(0xFFFF4757),
+                          icon: Iconsax.close_circle,
+                          color: AppTheme.error,
                           onTap: () => onEvaluate!(EvalResult.unknown),
                         ),
-                        const SizedBox(width: 10),
+                        SizedBox(width: 10.w),
                         _EvalButton(
                           label: 'Giusta',
-                          icon: Icons.check_rounded,
-                          color: const Color(0xFF2ED573),
+                          icon: Iconsax.tick_circle,
+                          color: AppTheme.success,
                           onTap: () => onEvaluate!(EvalResult.uncertain),
                         ),
                       ],
@@ -518,27 +533,27 @@ class _BackCard extends StatelessWidget {
                   ],
                   // Next / Retry buttons (after evaluation)
                   if (onNext != null) ...[
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _EvalButton(
                           label: 'Riprova',
-                          icon: Icons.refresh_rounded,
-                          color: const Color(0xFFFFA502),
+                          icon: Iconsax.refresh,
+                          color: AppTheme.warning,
                           onTap: () => onRetry!(),
                         ),
-                        const SizedBox(width: 10),
+                        SizedBox(width: 10.w),
                         _EvalButton(
                           label: 'Avanti',
-                          icon: Icons.arrow_forward_rounded,
-                          color: const Color(0xFF2ED573),
+                          icon: Iconsax.arrow_right_1,
+                          color: AppTheme.success,
                           onTap: () => onNext!(),
                         ),
                       ],
                     ),
                   ],
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                 ],
               ),
             ),
@@ -558,23 +573,26 @@ class _DiffVisualization extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+        ),
       ),
       child: Column(
         children: [
           // User's input label
           Text(
             'Correzione:',
-            style: TextStyle(
-              fontSize: 11,
+            style: GoogleFonts.poppins(
+              fontSize: 11.sp,
               color: Colors.white.withValues(alpha: 0.6),
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           // Diff characters
           Wrap(
             alignment: WrapAlignment.center,
@@ -589,32 +607,33 @@ class _DiffVisualization extends StatelessWidget {
                   textColor = Colors.white;
                   decoration = null;
                 case DiffOp.substitute:
-                  bgColor = const Color(0xFFFF4757).withValues(alpha: 0.4);
+                  bgColor = AppTheme.error.withValues(alpha: 0.4);
                   textColor = Colors.white;
                   decoration = null;
                 case DiffOp.insert:
                   // Character missing from user's input
-                  bgColor = const Color(0xFFFFA502).withValues(alpha: 0.4);
+                  bgColor = AppTheme.warning.withValues(alpha: 0.4);
                   textColor = Colors.white;
                   decoration = TextDecoration.underline;
                 case DiffOp.delete:
                   // Extra character user typed
-                  bgColor = const Color(0xFFFF4757).withValues(alpha: 0.3);
+                  bgColor = AppTheme.error.withValues(alpha: 0.3);
                   textColor = Colors.white.withValues(alpha: 0.6);
                   decoration = TextDecoration.lineThrough;
               }
 
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 1),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
                   color: bgColor,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   d.char == ' ' ? '\u00A0' : d.char,
-                  style: TextStyle(
-                    fontSize: 22,
+                  style: GoogleFonts.poppins(
+                    fontSize: 20.sp,
                     fontWeight: FontWeight.w700,
                     color: textColor,
                     decoration: decoration,
@@ -626,18 +645,18 @@ class _DiffVisualization extends StatelessWidget {
               );
             }).toList(),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           // Legend
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _LegendItem(
-                color: const Color(0xFFFF4757).withValues(alpha: 0.4),
+                color: AppTheme.error.withValues(alpha: 0.4),
                 label: 'Errore',
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               _LegendItem(
-                color: const Color(0xFFFFA502).withValues(alpha: 0.4),
+                color: AppTheme.warning.withValues(alpha: 0.4),
                 label: 'Mancante',
                 underline: true,
               ),
@@ -645,7 +664,7 @@ class _DiffVisualization extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
   }
 }
 
@@ -673,11 +692,11 @@ class _LegendItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
           ),
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: 4.w),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 10,
+          style: GoogleFonts.poppins(
+            fontSize: 10.sp,
             color: Colors.white.withValues(alpha: 0.6),
             fontWeight: FontWeight.w500,
           ),
@@ -705,7 +724,7 @@ class _EvalButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -719,12 +738,12 @@ class _EvalButton extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 22, color: color),
-            const SizedBox(height: 2),
+            Icon(icon, size: 22.sp, color: color),
+            SizedBox(height: 2.h),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
+              style: GoogleFonts.poppins(
+                fontSize: 12.sp,
                 fontWeight: FontWeight.w700,
                 color: color,
               ),

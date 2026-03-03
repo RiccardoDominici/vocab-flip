@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import '../data/vocabulary.dart';
 import '../models/word_progress.dart';
 import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
 import '../utils/fuzzy_match.dart';
 import '../utils/image_helper.dart';
 import '../widgets/flip_card.dart';
@@ -182,65 +187,63 @@ class _GameScreenState extends State<GameScreen> {
       // Prevent keyboard from pushing layout up excessively
       resizeToAvoidBottomInset: false,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF)],
-          ),
-        ),
+        decoration: AppTheme.gradientBackground,
         child: SafeArea(
           child: Column(
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+                padding: EdgeInsets.fromLTRB(8.w, 8.h, 16.w, 0),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded),
+                      icon: const Icon(Iconsax.arrow_left),
                       onPressed: () => Navigator.of(context).pop(),
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF2D3436),
+                        foregroundColor: AppTheme.textPrimary,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Icon(widget.theme.icon, size: 28, color: themeColor),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 12.w),
+                    Icon(widget.theme.icon, size: 28.sp, color: themeColor),
+                    SizedBox(width: 8.w),
                     Flexible(
                       child: Text(
                         widget.theme.name,
-                        style: const TextStyle(
-                          fontSize: 22,
+                        style: GoogleFonts.poppins(
+                          fontSize: 20.sp,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3436),
+                          color: AppTheme.textPrimary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 12.w, vertical: 6.h),
                       decoration: BoxDecoration(
                         color: themeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: themeColor.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Text(
                         '${_currentIndex + 1} / ${_words.length}',
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600,
                           color: themeColor,
+                          fontSize: 14.sp,
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
               // Progress bar
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 4.h),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
@@ -252,15 +255,15 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               // Hint
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Text(
                   _hintText,
-                  style: const TextStyle(
-                    color: Color(0xFF636E72),
-                    fontSize: 14,
+                  style: GoogleFonts.poppins(
+                    color: AppTheme.textSecondary,
+                    fontSize: 14.sp,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -269,8 +272,8 @@ class _GameScreenState extends State<GameScreen> {
               Expanded(
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 32.w, vertical: 16.h),
                     child: ConstrainedBox(
                       constraints:
                           const BoxConstraints(maxWidth: 360, maxHeight: 480),

@@ -1,8 +1,13 @@
 import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/vocabulary.dart';
 import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
 import 'game_screen.dart';
 import 'settings_screen.dart';
 
@@ -39,26 +44,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF)],
-          ),
-        ),
+        decoration: AppTheme.gradientBackground,
         child: SafeArea(
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                  padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 8.h),
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.settings_rounded),
+                            icon: const Icon(Iconsax.setting_2),
                             onPressed: () async {
                               await Navigator.of(context).push(
                                 PageRouteBuilder(
@@ -78,74 +77,76 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                             style: IconButton.styleFrom(
                               backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF636E72),
+                              foregroundColor: AppTheme.textSecondary,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      const Icon(
-                        Icons.school_rounded,
-                        size: 48,
-                        color: Color(0xFF2D3436),
-                      ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 8.h),
+                      Icon(
+                        Iconsax.book_1,
+                        size: 48.sp,
+                        color: AppTheme.primary,
+                      )
+                          .animate()
+                          .fadeIn(duration: 500.ms)
+                          .scale(begin: const Offset(0.8, 0.8)),
+                      SizedBox(height: 12.h),
                       Text(
                         'Vocab Flip',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineLarge
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2D3436),
-                            ),
-                      ),
-                      const SizedBox(height: 8),
+                        style: GoogleFonts.poppins(
+                          fontSize: 30.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(duration: 600.ms)
+                          .slideY(begin: -0.2),
+                      SizedBox(height: 6.h),
                       Text(
                         'Impara l\'inglese giocando!',
-                        style:
-                            Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: const Color(0xFF636E72),
-                                ),
-                      ),
-                      const SizedBox(height: 24),
-                      // CEFR Level Selector
+                        style: GoogleFonts.poppins(
+                          fontSize: 15.sp,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+                      SizedBox(height: 24.h),
                       _CefrSelector(
                         selected: _selectedCefr,
                         onSelected: (level) =>
                             setState(() => _selectedCefr = level),
-                      ),
-                      const SizedBox(height: 8),
-                      // Level description
+                      ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+                      SizedBox(height: 8.h),
                       Text(
                         cefrLabels[_selectedCefr] ?? _selectedCefr,
-                        style: TextStyle(
-                          fontSize: 14,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                           color: cefrColors[_selectedCefr] ?? Colors.grey,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         '${_filteredThemes.length} categorie - ${_filteredThemes.fold<int>(0, (sum, t) => sum + t.words.length)} parole',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF636E72),
+                        style: GoogleFonts.poppins(
+                          fontSize: 12.sp,
+                          color: AppTheme.textMuted,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20.h),
                     ],
                   ),
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
                 sliver: SliverGrid(
                   gridDelegate:
-                      const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
+                      SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 200.w,
+                    mainAxisSpacing: 16.h,
+                    crossAxisSpacing: 16.w,
                     childAspectRatio: 0.85,
                   ),
                   delegate: SliverChildBuilderDelegate(
@@ -155,7 +156,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         theme: theme,
                         progressService: _progressService,
                         onReturn: _refreshProgress,
-                      );
+                      )
+                          .animate()
+                          .fadeIn(
+                            delay: (80 * index).ms,
+                            duration: 400.ms,
+                          )
+                          .slideY(begin: 0.15, duration: 400.ms);
                     },
                     childCount: _filteredThemes.length,
                   ),
@@ -168,8 +175,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _ApkDownloadButton(),
                   ),
                 ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 32),
+              SliverToBoxAdapter(
+                child: SizedBox(height: 32.h),
               ),
             ],
           ),
@@ -194,13 +201,13 @@ class _CefrSelector extends StatelessWidget {
           final isSelected = level == selected;
           final color = cefrColors[level] ?? Colors.grey;
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            padding: EdgeInsets.symmetric(horizontal: 4.w),
             child: FilterChip(
               label: Text(
                 level,
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w700,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   color: isSelected ? Colors.white : color,
                 ),
               ),
@@ -212,7 +219,7 @@ class _CefrSelector extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             ),
           );
         }).toList(),
@@ -236,9 +243,9 @@ class _ApkDownloadButton extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: const Color(0xFF2D3436),
+          color: AppTheme.textPrimary,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
@@ -248,17 +255,17 @@ class _ApkDownloadButton extends StatelessWidget {
             ),
           ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.android_rounded, color: Color(0xFF2ED573), size: 16),
-            SizedBox(width: 6),
+            Icon(Icons.android_rounded, color: AppTheme.success, size: 16.sp),
+            SizedBox(width: 6.w),
             Text(
               'Scarica per Android',
-              style: TextStyle(
+              style: GoogleFonts.poppins(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
-                fontSize: 12,
+                fontSize: 12.sp,
               ),
             ),
           ],
@@ -315,63 +322,66 @@ class _ThemeCardState extends State<_ThemeCard> {
             widget.onReturn();
           },
           child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: themeColor.withValues(alpha: 0.25),
-                  blurRadius: _hovering ? 20 : 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+            decoration: AppTheme.glassCard(
+              opacity: 0.7,
+              shadowColor: themeColor,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 64,
-                  height: 64,
+                  width: 56.w,
+                  height: 56.w,
                   decoration: BoxDecoration(
-                    color: themeColor.withValues(alpha: 0.12),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        themeColor.withValues(alpha: 0.15),
+                        themeColor.withValues(alpha: 0.05),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: themeColor.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Center(
                     child: Icon(
                       widget.theme.icon,
-                      size: 32,
+                      size: 28.sp,
                       color: themeColor,
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 10.h),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w),
                   child: Text(
                     widget.theme.name,
-                    style: const TextStyle(
-                      fontSize: 15,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF2D3436),
+                      color: AppTheme.textPrimary,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   '${widget.theme.words.length} parole',
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.sp,
                     color: themeColor,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 if (completionPct > 0) ...[
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
                     child: Column(
                       children: [
                         ClipRRect(
@@ -385,11 +395,11 @@ class _ThemeCardState extends State<_ThemeCard> {
                                 AlwaysStoppedAnimation<Color>(themeColor),
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2.h),
                         Text(
                           '$completionPct%',
-                          style: TextStyle(
-                            fontSize: 10,
+                          style: GoogleFonts.poppins(
+                            fontSize: 10.sp,
                             color: themeColor,
                             fontWeight: FontWeight.w600,
                           ),

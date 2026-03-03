@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:shimmer/shimmer.dart';
 import '../utils/image_helper.dart';
 
 /// Displays a Wikipedia / Wikimedia Commons image for a keyword.
@@ -66,24 +68,23 @@ class _WordImageState extends State<WordImage> {
     _resolve();
   }
 
+  Widget _buildShimmer(BorderRadius radius) {
+    return ClipRRect(
+      borderRadius: radius,
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(color: Colors.white),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final radius = widget.borderRadius ?? BorderRadius.circular(16);
 
     if (!_resolved) {
-      return ClipRRect(
-        borderRadius: radius,
-        child: Container(
-          color: Colors.grey[200],
-          child: const Center(
-            child: SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
-            ),
-          ),
-        ),
-      );
+      return _buildShimmer(radius);
     }
 
     if (_imageUrl == null) {
@@ -92,7 +93,7 @@ class _WordImageState extends State<WordImage> {
         child: Container(
           color: Colors.grey[200],
           child: Icon(
-            Icons.image_not_supported_outlined,
+            Iconsax.gallery_slash,
             size: 40,
             color: Colors.grey[400],
           ),
@@ -107,21 +108,10 @@ class _WordImageState extends State<WordImage> {
         fit: widget.fit,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
-          return Container(
-            color: Colors.grey[200],
-            child: Center(
-              child: SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                      : null,
-                ),
-              ),
-            ),
+          return Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(color: Colors.white),
           );
         },
         errorBuilder: (context, error, stackTrace) {
@@ -132,7 +122,7 @@ class _WordImageState extends State<WordImage> {
           return Container(
             color: Colors.grey[200],
             child: Icon(
-              Icons.image_not_supported_outlined,
+              Iconsax.gallery_slash,
               size: 40,
               color: Colors.grey[400],
             ),

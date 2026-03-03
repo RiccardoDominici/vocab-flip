@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -8,43 +13,37 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF)],
-          ),
-        ),
+        decoration: AppTheme.gradientBackground,
         child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+                padding: EdgeInsets.fromLTRB(8.w, 8.h, 16.w, 0),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded),
+                      icon: const Icon(Iconsax.arrow_left),
                       onPressed: () => Navigator.of(context).pop(),
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF2D3436),
+                        foregroundColor: AppTheme.textPrimary,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
+                    SizedBox(width: 12.w),
+                    Text(
                       'Impostazioni',
-                      style: TextStyle(
-                        fontSize: 22,
+                      style: GoogleFonts.poppins(
+                        fontSize: 22.sp,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D3436),
+                        color: AppTheme.textPrimary,
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 32),
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
+              SizedBox(height: 32.h),
               // Stats
               FutureBuilder<ProgressService>(
                 future: ProgressService.getInstance(),
@@ -54,74 +53,73 @@ class SettingsScreen extends StatelessWidget {
                   }
                   final service = snapshot.data!;
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                          padding: EdgeInsets.all(20.w),
+                          decoration: AppTheme.glassCard(
+                            opacity: 0.7,
+                            shadowColor: AppTheme.primary,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Statistiche',
-                                style: TextStyle(
-                                  fontSize: 18,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18.sp,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2D3436),
+                                  color: AppTheme.textPrimary,
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 16.h),
                               _StatRow(
-                                icon: Icons.star_rounded,
+                                icon: Iconsax.star_1,
                                 label: 'Parole padroneggiate',
                                 value: '${service.totalMastered}',
-                                color: const Color(0xFFFFA502),
+                                color: AppTheme.warning,
                               ),
-                              const SizedBox(height: 12),
+                              SizedBox(height: 12.h),
                               _StatRow(
-                                icon: Icons.local_fire_department_rounded,
+                                icon: Iconsax.flash_1,
                                 label: 'Round perfetti di fila',
                                 value: '${service.consecutivePerfectRounds}',
-                                color: const Color(0xFFFF4757),
+                                color: AppTheme.error,
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 32),
+                        )
+                            .animate()
+                            .fadeIn(duration: 500.ms)
+                            .slideX(begin: -0.1),
+                        SizedBox(height: 32.h),
                         // Reset button
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             onPressed: () => _confirmReset(context, service),
-                            icon: const Icon(Icons.delete_outline_rounded,
-                                color: Color(0xFFFF4757)),
-                            label: const Text(
+                            icon: Icon(Iconsax.trash,
+                                color: AppTheme.error, size: 20.sp),
+                            label: Text(
                               'Resetta progresso',
-                              style: TextStyle(color: Color(0xFFFF4757)),
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.error,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Color(0xFFFF4757)),
+                              side: const BorderSide(color: AppTheme.error),
                               padding:
-                                  const EdgeInsets.symmetric(vertical: 14),
+                                  EdgeInsets.symmetric(vertical: 14.h),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                           ),
-                        ),
+                        ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
                       ],
                     ),
                   );
@@ -138,15 +136,19 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Resetta progresso'),
-        content: const Text(
+        title: Text(
+          'Resetta progresso',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
           'Sei sicuro? Tutto il tuo progresso (livelli, round, badge) '
           'verr\u00e0 cancellato. Questa azione non pu\u00f2 essere annullata.',
+          style: GoogleFonts.poppins(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Annulla'),
+            child: Text('Annulla', style: GoogleFonts.poppins()),
           ),
           FilledButton(
             onPressed: () async {
@@ -154,17 +156,20 @@ class SettingsScreen extends StatelessWidget {
               if (ctx.mounted) Navigator.of(ctx).pop();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Progresso resettato!'),
+                  SnackBar(
+                    content: Text(
+                      'Progresso resettato!',
+                      style: GoogleFonts.poppins(),
+                    ),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
               }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFF4757),
+              backgroundColor: AppTheme.error,
             ),
-            child: const Text('Resetta'),
+            child: Text('Resetta', style: GoogleFonts.poppins()),
           ),
         ],
       ),
@@ -189,21 +194,21 @@ class _StatRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(width: 12),
+        Icon(icon, color: color, size: 24.sp),
+        SizedBox(width: 12.w),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Color(0xFF636E72),
+            style: GoogleFonts.poppins(
+              fontSize: 15.sp,
+              color: AppTheme.textSecondary,
             ),
           ),
         ),
         Text(
           value,
-          style: TextStyle(
-            fontSize: 18,
+          style: GoogleFonts.poppins(
+            fontSize: 18.sp,
             fontWeight: FontWeight.bold,
             color: color,
           ),
